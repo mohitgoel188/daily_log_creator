@@ -2,6 +2,8 @@
 from colorama import init, Fore, Style
 from datetime import datetime
 import argparse
+import os
+from log_writers import LocalLogWriter, JoplinLogWriter
 
 def main():
     # Parse command-line arguments
@@ -11,11 +13,23 @@ def main():
         default="daily_log.md",
         help="Path to the Markdown log file (default: daily_log.md)"
     )
+    parser.add_argument(
+        "-j", "--joplin",
+        action="store_true",
+        help="Also append the log as a note in Joplin (requires joppy and JOPLIN_API_KEY env variable)"
+    )
+    parser.add_argument(
+        "-n", "--note-id",
+        default=None,
+        help="Joplin note ID to append the log to (used only with --joplin)"
+    )
     args = parser.parse_args()
     md_filepath = args.file
+    use_joplin = args.joplin
+    note_id = args.note_id
 
     # Initialize colorama for cross-platform colored output
-    init()  # Autoreset can be used, but here we manually reset after each print
+    init()
     print("Enter your daily log entries. Type each point one per line.")
     print("Press Enter on an empty line to finish a section.\n")
 
@@ -40,10 +54,8 @@ def main():
         user_entries[header] = section_points
         print()
 
-    # Create a timestamp for the entry
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    # Build Markdown content lines
     md_lines = [f"# 🗓️ **Daily Log - {timestamp}**\n"]
     non_empty_sections = [
         header for header in section_headers if user_entries.get(header)
@@ -54,11 +66,17 @@ def main():
             md_lines.append(f"- {point}")
         md_lines.append("")  # Blank line after section
 
-    # Only write if at least one section is non-empty
+    log_content = "\n".join(md_lines) + "\n"
+
     if non_empty_sections:
-        with open(md_filepath, "a", encoding="utf-8") as f:
-            f.write("\n".join(md_lines) + "\n")
-        print(Fore.GREEN + f"Your entry has been added to {md_filepath}!" + Style.RESET_ALL)
+        try:
+            if use_joplin:
+                writer = JoplinLogWriter(note_id=note_id)
+            else:
+                writer = LocalLogWriter(md_filepath)
+            writer.write(log_content, timestamp)
+        except Exception as e:
+            print(Fore.RED + f"Failed to write log: {e}" + Style.RESET_ALL)
     else:
         print(Fore.YELLOW + "No entries provided. Nothing was added to the log file." + Style.RESET_ALL)
 
