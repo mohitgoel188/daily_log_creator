@@ -26,11 +26,11 @@ class JoplinLogWriter(LogWriter):
 
     def write(self, log_content, timestamp):
         if self.note_id:
-            note = self.joplin_client.get_notes(self.note_id)
+            note = self.joplin_client.get_note(self.note_id , fields="body")
             if not note:
                 print(Fore.RED + f"Note with ID {self.note_id} not found in Joplin." + Style.RESET_ALL)
                 return
-            updated_body = note['body'] + "\n" + log_content
+            updated_body = f"{note.body or ""}\n{log_content}"
             self.joplin_client.modify_note(self.note_id, body=updated_body)
             print(Fore.GREEN + f"Your entry has been appended to Joplin note {self.note_id}!" + Style.RESET_ALL)
         else:

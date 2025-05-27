@@ -174,3 +174,4 @@ cython_debug/
 .pypirc
 
 launch.json
+daily_log.md

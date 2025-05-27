@@ -56,12 +56,12 @@ def main():
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    md_lines = [f"# 🗓️ **Daily Log - {timestamp}**\n"]
+    md_lines = [f"## 🗓️ **Daily Log - {timestamp}**\n"]
     non_empty_sections = [
         header for header in section_headers if user_entries.get(header)
     ]
     for header in non_empty_sections:
-        md_lines.append(f"### {header}")
+        md_lines.append(f"**{header}**")
         for point in user_entries[header]:
             md_lines.append(f"- {point}")
         md_lines.append("")  # Blank line after section
